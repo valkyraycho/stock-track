@@ -11,7 +11,9 @@ import { MarketIndices } from "./components/MarketIndices";
 import { SortControls, type SortKey } from "./components/SortControls";
 import { StockDetailModal } from "./components/StockDetailModal";
 import { TagFilter } from "./components/TagFilter";
+import { AlertWatcher } from "./components/AlertWatcher";
 import { useFavorites } from "./hooks/useFavorites";
+import { useAlerts } from "./hooks/useAlerts";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { profile2, quote } from "./lib/finnhub";
 import { showToast } from "./lib/toast";
@@ -26,6 +28,13 @@ export default function App() {
   const token = storedKey || envKey;
 
   const { favorites, add, remove, has, setPosition, setTags } = useFavorites();
+  const {
+    alerts,
+    add: addAlert,
+    remove: removeAlert,
+    toggleMute: toggleAlertMute,
+    markTriggered,
+  } = useAlerts();
 
   const [addOpen, setAddOpen] = useState(false);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
@@ -252,6 +261,13 @@ export default function App() {
 
       {token && <TickerTape favorites={favorites} token={token} />}
 
+      {/* Background alert watcher — renders nothing, just subscribes to ticks */}
+      <AlertWatcher
+        token={token}
+        alerts={alerts}
+        onTrigger={markTriggered}
+      />
+
       <ToastContainer />
 
       {(needsKey || keyModalOpen) && (
@@ -284,6 +300,10 @@ export default function App() {
           onUpdatePosition={setPosition}
           onUpdateTags={setTags}
           allTags={allTags}
+          alerts={alerts}
+          onAddAlert={addAlert}
+          onRemoveAlert={removeAlert}
+          onToggleAlertMute={toggleAlertMute}
         />
       )}
     </div>

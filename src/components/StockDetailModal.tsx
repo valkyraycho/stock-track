@@ -12,7 +12,15 @@ import { quote as fetchQuote } from "../lib/finnhub";
 import { NewsPanel } from "./NewsPanel";
 import { PositionEditor } from "./PositionEditor";
 import { TagEditor } from "./TagEditor";
-import type { Favorite, Position, Profile, Quote, TradeTick } from "../types";
+import { AlertEditor } from "./AlertEditor";
+import type {
+  Favorite,
+  Position,
+  PriceAlert,
+  Profile,
+  Quote,
+  TradeTick,
+} from "../types";
 import { formatRelative } from "../lib/marketHours";
 
 type Props = {
@@ -23,6 +31,10 @@ type Props = {
   onUpdatePosition: (symbol: string, position: Position | undefined) => void;
   onUpdateTags: (symbol: string, tags: string[]) => void;
   allTags: string[];
+  alerts: PriceAlert[];
+  onAddAlert: (a: Omit<PriceAlert, "id" | "createdAt">) => void;
+  onRemoveAlert: (id: string) => void;
+  onToggleAlertMute: (id: string) => void;
 };
 
 /**
@@ -44,6 +56,10 @@ export function StockDetailModal({
   onUpdatePosition,
   onUpdateTags,
   allTags,
+  alerts,
+  onAddAlert,
+  onRemoveAlert,
+  onToggleAlertMute,
 }: Props) {
   const [seed, setSeed] = useState<Quote | null>(null);
   const [price, setPrice] = useState<number | null>(null);
@@ -247,6 +263,16 @@ export function StockDetailModal({
           tags={favorite.tags}
           allTags={allTags}
           onSave={(next) => onUpdateTags(favorite.symbol, next)}
+        />
+
+        {/* Alerts */}
+        <AlertEditor
+          symbol={favorite.symbol}
+          alerts={alerts.filter((a) => a.symbol === favorite.symbol)}
+          currentPrice={price}
+          onAdd={onAddAlert}
+          onRemove={onRemoveAlert}
+          onToggleMute={onToggleAlertMute}
         />
 
         {/* News */}

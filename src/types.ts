@@ -70,6 +70,20 @@ export type TradeTick = {
   /** volume */ v: number;
 };
 
+/** A user-defined price alert for a symbol. */
+export type PriceAlert = {
+  id: string;
+  symbol: string;
+  direction: "above" | "below";
+  threshold: number;
+  /** ISO timestamp. */
+  createdAt: string;
+  /** ISO timestamp when the alert most recently fired; cleared on edit. */
+  triggeredAt?: string;
+  /** If true, the alert is disabled but preserved (user can re-enable). */
+  muted?: boolean;
+};
+
 /** A row from Finnhub /company-news. */
 export type NewsItem = {
   category: string;
