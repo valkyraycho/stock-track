@@ -2,9 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-// `base` MUST match the GitHub Pages path. For a project site hosted at
-// https://<user>.github.io/stock-track/ this needs to be '/stock-track/'.
-// When running `vite dev` locally we want '/' instead, so we key off mode.
+// `base` MUST match the GitHub Pages URL path.
+//   - USER site (repo named "<user>.github.io") → served at the root → base '/'
+//   - PROJECT site (any other repo name)       → served at "/<repo>/" → base '/<repo>/'
+//
+// This repo is a project site at https://valkyraycho.github.io/stock-track/,
+// so production builds need base '/stock-track/'. In dev we always want '/'.
 export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
   base: command === "build" ? "/stock-track/" : "/",
