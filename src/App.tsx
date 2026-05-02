@@ -11,6 +11,8 @@ import { MarketIndices } from "./components/MarketIndices";
 import { SortControls, type SortKey } from "./components/SortControls";
 import { StockDetailModal } from "./components/StockDetailModal";
 import { TagFilter } from "./components/TagFilter";
+import { ViewModeToggle, type ViewMode } from "./components/ViewModeToggle";
+import { GroupedStockGrid } from "./components/GroupedStockGrid";
 import { AlertWatcher } from "./components/AlertWatcher";
 import { useFavorites } from "./hooks/useFavorites";
 import { useAlerts } from "./hooks/useAlerts";
@@ -42,6 +44,10 @@ export default function App() {
   const [sortKey, setSortKey] = useLocalStorage<SortKey>(
     "stock-track:sort",
     "recent"
+  );
+  const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
+    "stock-track:viewMode",
+    "flat"
   );
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
@@ -226,6 +232,11 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3">
               <SortControls value={sortKey} onChange={setSortKey} />
+              <ViewModeToggle
+                value={viewMode}
+                onChange={setViewMode}
+                disabled={allTags.length === 0}
+              />
               <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400 md:flex">
                 press <Kbd>a</Kbd> to add
               </div>
@@ -247,7 +258,16 @@ export default function App() {
             onQuickAdd={(s) => void quickAdd(s)}
           />
         ) : (
-          token && (
+          token &&
+          (viewMode === "grouped" && allTags.length > 0 ? (
+            <GroupedStockGrid
+              favorites={sortedFavorites}
+              token={token}
+              onRemove={removeWithUndo}
+              onOpen={(s) => setOpenSymbol(s)}
+              onSeed={recordSeed}
+            />
+          ) : (
             <StockGrid
               favorites={sortedFavorites}
               token={token}
@@ -255,7 +275,7 @@ export default function App() {
               onOpen={(s) => setOpenSymbol(s)}
               onSeed={recordSeed}
             />
-          )
+          ))
         )}
       </main>
 
