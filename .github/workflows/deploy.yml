@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+# Builds on push to main and publishes dist/ via the official Pages action.
+# Enable Pages → Source = "GitHub Actions" in your repo settings before the
+# first run, otherwise the deploy step will fail with a permissions error.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run build
+        # If you want the deployed site to ship with a baked-in Finnhub key,
+        # add it as a repository secret and uncomment:
+        # env:
+        #   VITE_FINNHUB_API_KEY: ${{ secrets.VITE_FINNHUB_API_KEY }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
