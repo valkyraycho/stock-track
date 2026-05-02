@@ -10,6 +10,7 @@ import { MarketClockBanner } from "./components/MarketClockBanner";
 import { MarketIndices } from "./components/MarketIndices";
 import { SortControls, type SortKey } from "./components/SortControls";
 import { StockDetailModal } from "./components/StockDetailModal";
+import { TagFilter } from "./components/TagFilter";
 import { useFavorites } from "./hooks/useFavorites";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { profile2, quote } from "./lib/finnhub";
@@ -24,7 +25,7 @@ export default function App() {
   const envKey = import.meta.env.VITE_FINNHUB_API_KEY || null;
   const token = storedKey || envKey;
 
-  const { favorites, add, remove, has, setPosition } = useFavorites();
+  const { favorites, add, remove, has, setPosition, setTags } = useFavorites();
 
   const [addOpen, setAddOpen] = useState(false);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function App() {
     "stock-track:sort",
     "recent"
   );
+  const [activeTag, setActiveTag] = useState<string | null>(null);
 
   // Seed quote map: symbol → { dp, c }. Populated by cards as they mount.
   // Kept in a ref + state so we can trigger re-renders only when needed
@@ -55,8 +57,25 @@ export default function App() {
    * Sorted view of favorites. We sort a copy — never mutate the stored
    * array — so "recent" (original localStorage order) remains intact.
    */
+  // Union of all tags across favorites, sorted alphabetically.
+  const allTags = useMemo(() => {
+    const s = new Set<string>();
+    for (const f of favorites) {
+      if (f.tags) for (const t of f.tags) s.add(t);
+    }
+    return Array.from(s).sort();
+  }, [favorites]);
+
+  // If the active tag disappears (user removed last use), clear it.
+  useEffect(() => {
+    if (activeTag && !allTags.includes(activeTag)) setActiveTag(null);
+  }, [activeTag, allTags]);
+
   const sortedFavorites = useMemo(() => {
-    const list = favorites.slice();
+    let list = favorites.slice();
+    if (activeTag) {
+      list = list.filter((f) => f.tags?.includes(activeTag));
+    }
     if (sortKey === "alpha") {
       list.sort((a, b) => a.symbol.localeCompare(b.symbol));
     } else if (sortKey === "change") {
@@ -68,7 +87,7 @@ export default function App() {
     }
     // "recent" = original order (newest first; useFavorites prepends on add).
     return list;
-  }, [favorites, sortKey, seedMap]);
+  }, [favorites, sortKey, seedMap, activeTag]);
 
   // --- Delete with undo via toast --------------------------------------------
   //
@@ -205,6 +224,14 @@ export default function App() {
           </div>
         )}
 
+        {favorites.length > 0 && (
+          <TagFilter
+            allTags={allTags}
+            activeTag={activeTag}
+            onChange={setActiveTag}
+          />
+        )}
+
         {favorites.length === 0 ? (
           <EmptyState
             onAdd={() => setAddOpen(true)}
@@ -255,6 +282,8 @@ export default function App() {
           onClose={() => setOpenSymbol(null)}
           onRemove={removeWithUndo}
           onUpdatePosition={setPosition}
+          onUpdateTags={setTags}
+          allTags={allTags}
         />
       )}
     </div>

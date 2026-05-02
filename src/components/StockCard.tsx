@@ -226,6 +226,20 @@ export function StockCard({
         <Stat label="high" value={seed ? formatPrice(seed.h) : "—"} />
         <Stat label="low" value={seed ? formatPrice(seed.l) : "—"} />
       </div>
+
+      {/* Tags */}
+      {favorite.tags && favorite.tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {favorite.tags.slice(0, 3).map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-[var(--color-iris)]/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--color-iris)]"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
     </button>
   );
 }
