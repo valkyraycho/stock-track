@@ -106,7 +106,7 @@ function GroupHeader({
       >
         {tag}
       </span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
         · {count} {count === 1 ? "ticker" : "tickers"}
       </span>
       <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />

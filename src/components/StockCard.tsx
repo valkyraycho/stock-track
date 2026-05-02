@@ -221,7 +221,7 @@ export function StockCard({
       </div>
 
       {/* Bottom stats */}
-      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-3 font-mono text-[10px] uppercase tracking-[0.15em] text-bone-400">
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-3 font-mono text-[11px] uppercase tracking-[0.15em] text-bone-400">
         <Stat label="open" value={seed ? formatPrice(seed.o) : "—"} />
         <Stat label="high" value={seed ? formatPrice(seed.h) : "—"} />
         <Stat label="low" value={seed ? formatPrice(seed.l) : "—"} />
@@ -233,7 +233,7 @@ export function StockCard({
           {favorite.tags.slice(0, 3).map((t) => (
             <span
               key={t}
-              className="rounded-full bg-[var(--color-iris)]/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-[var(--color-iris)]"
+              className="rounded-full bg-[var(--color-iris)]/15 px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--color-iris)]"
             >
               {t}
             </span>
@@ -260,14 +260,14 @@ function FreshnessLabel({
 }) {
   if (!lastTickAt) {
     return (
-      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
         awaiting
       </span>
     );
   }
   return (
     <span
-      className={`font-mono text-[9px] uppercase tracking-[0.2em] ${
+      className={`font-mono text-[11px] uppercase tracking-[0.2em] ${
         isStale ? "text-[var(--color-ember)]" : "text-bone-300"
       }`}
     >
@@ -298,7 +298,7 @@ function PositionLine({
   return (
     <div className="mt-3 flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
       <Wallet className="size-3 shrink-0 text-[var(--color-lime)]" />
-      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bone-300">
+      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-300">
         {formatShares(position.shares)} sh
       </span>
       <span className="ml-auto font-mono text-xs text-bone-100 tabular">
@@ -312,7 +312,7 @@ function PositionLine({
       </span>
       {pl !== null && plPct !== null && (
         <span
-          className={`font-mono text-[10px] tabular ${
+          className={`font-mono text-[11px] tabular ${
             isUp ? "text-[var(--color-gain)]" : "text-[var(--color-loss)]"
           }`}
         >

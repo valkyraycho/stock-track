@@ -42,7 +42,7 @@ export function MarketClockBanner() {
           <span className="text-bone-400">({until})</span>
         </span>
       </div>
-      <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400 md:inline">
+      <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400 md:inline">
         09:30 ET · M–F
       </span>
     </div>

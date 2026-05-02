@@ -50,7 +50,7 @@ export function TagEditor({ symbol, tags, allTags, onSave }: Props) {
     <div className="border-t border-white/5 px-6 py-5">
       <div className="mb-3 flex items-center gap-2">
         <Tag className="size-3.5 text-[var(--color-lime)]" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
           tags
         </span>
       </div>
@@ -59,7 +59,7 @@ export function TagEditor({ symbol, tags, allTags, onSave }: Props) {
         {current.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-iris)]/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--color-iris)]"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-iris)]/15 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--color-iris)]"
           >
             {tag}
             <button
@@ -83,7 +83,7 @@ export function TagEditor({ symbol, tags, allTags, onSave }: Props) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="add tag…"
-            className="w-28 rounded-full border border-white/10 bg-ink-800 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-bone-100 placeholder:text-bone-400 focus:border-[var(--color-iris)]/60 focus:outline-none"
+            className="w-28 rounded-full border border-white/10 bg-ink-800 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-bone-100 placeholder:text-bone-400 focus:border-[var(--color-iris)]/60 focus:outline-none"
             maxLength={24}
           />
           <button
@@ -99,14 +99,14 @@ export function TagEditor({ symbol, tags, allTags, onSave }: Props) {
 
       {suggestions.length > 0 && (
         <div className="mt-3">
-          <span className="mr-2 font-mono text-[9px] uppercase tracking-[0.2em] text-bone-400">
+          <span className="mr-2 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
             suggestions —
           </span>
           {suggestions.slice(0, 8).map((t) => (
             <button
               key={t}
               onClick={() => addTag(t)}
-              className="mr-1.5 rounded-full border border-white/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-bone-300 transition hover:border-[var(--color-iris)]/40 hover:text-[var(--color-iris)]"
+              className="mr-1.5 rounded-full border border-white/10 px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.15em] text-bone-300 transition hover:border-[var(--color-iris)]/40 hover:text-[var(--color-iris)]"
             >
               {t}
             </button>

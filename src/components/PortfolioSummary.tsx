@@ -53,7 +53,7 @@ export function PortfolioSummary({ favorites }: Props) {
     <div className="flex items-center gap-3">
       <span className="hidden h-8 w-px bg-white/10 md:block" />
       <div className="flex flex-col leading-tight">
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-bone-400">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
           portfolio
         </span>
         <div className="flex items-baseline gap-2">
@@ -68,7 +68,7 @@ export function PortfolioSummary({ favorites }: Props) {
           </span>
           {summary.pl !== null && summary.plPct !== null && (
             <span
-              className={`inline-flex items-center gap-0.5 font-mono text-[10px] tabular ${
+              className={`inline-flex items-center gap-0.5 font-mono text-[11px] tabular ${
                 isUp ? "text-[var(--color-gain)]" : "text-[var(--color-loss)]"
               }`}
             >

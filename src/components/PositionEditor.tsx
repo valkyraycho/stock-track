@@ -73,7 +73,7 @@ export function PositionEditor({
     <div className="border-t border-white/5 px-6 py-5">
       <div className="mb-3 flex items-center gap-2">
         <Wallet className="size-3.5 text-[var(--color-lime)]" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
           your position
         </span>
       </div>
@@ -117,7 +117,7 @@ export function PositionEditor({
         {position && (
           <button
             onClick={() => onSave(undefined)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-300 transition hover:border-[var(--color-loss)]/50 hover:text-[var(--color-loss)]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-300 transition hover:border-[var(--color-loss)]/50 hover:text-[var(--color-loss)]"
           >
             <Trash2 className="size-3" />
             clear
@@ -126,7 +126,7 @@ export function PositionEditor({
         <button
           onClick={save}
           disabled={!dirty}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-lime)] px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-950 transition hover:bg-[#d4ff6b] disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-lime)] px-3 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-950 transition hover:bg-[#d4ff6b] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Check className="size-3" />
           save
@@ -151,7 +151,7 @@ function LabeledInput({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
         {label}
       </span>
       <input
@@ -183,7 +183,7 @@ function Readout({
       : "text-bone-100";
   return (
     <div className="flex flex-col gap-1">
-      <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
         {label}
       </span>
       <span className={`truncate font-mono text-sm tabular ${color}`}>

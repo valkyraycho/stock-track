@@ -159,7 +159,7 @@ export function StockDetailModal({
                   {favorite.symbol}
                 </span>
                 {profile?.exchange && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
                     {profile.exchange}
                   </span>
                 )}
@@ -314,7 +314,7 @@ export function StockDetailModal({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
         {label}
       </span>
       <span className="font-mono text-sm text-bone-100 tabular">{value}</span>
@@ -331,14 +331,14 @@ function FreshnessBadge({ lastTickAt }: { lastTickAt: number | null }) {
   }, []);
   if (!lastTickAt) {
     return (
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
         <span className="pulse-dot dim" />
         awaiting first tick
       </div>
     );
   }
   return (
-    <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-300">
+    <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-300">
       <span className="pulse-dot" />
       last tick {formatRelative(lastTickAt)}
     </div>

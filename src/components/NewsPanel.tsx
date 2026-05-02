@@ -48,13 +48,13 @@ export function NewsPanel({ symbol, token }: Props) {
     <div className="border-t border-white/5 px-6 py-5">
       <div className="mb-3 flex items-center gap-2">
         <Newspaper className="size-3.5 text-[var(--color-lime)]" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
           recent news · 14d
         </span>
       </div>
 
       {items === null && !error && (
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
           <Loader2 className="size-3 animate-spin" />
           loading…
         </div>
@@ -109,7 +109,7 @@ function NewsRow({ item }: { item: NewsItem }) {
           <div className="line-clamp-2 text-sm font-medium leading-snug text-bone-100 group-hover:text-[var(--color-lime)]">
             {item.headline}
           </div>
-          <div className="mt-1.5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+          <div className="mt-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
             <span>{item.source}</span>
             <span>·</span>
             <span>{formatRelative(item.datetime * 1000)}</span>

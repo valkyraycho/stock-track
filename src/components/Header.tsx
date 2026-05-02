@@ -96,10 +96,10 @@ function ConnectionBadge({ live, state }: { live: boolean; state: string }) {
     <div className="flex items-center gap-2.5">
       <span className={`pulse-dot ${live ? "" : "dim"}`} />
       <div className="flex flex-col leading-tight">
-        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bone-300">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-300">
           {live ? "streaming" : state}
         </span>
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-bone-400">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
           finnhub · wss
         </span>
       </div>
@@ -122,7 +122,7 @@ function LiveClock({ className = "" }: { className?: string }) {
   return (
     <div className={`items-center gap-2 ${className}`}>
       <span className="font-mono text-lg text-bone-50 tabular">{time}</span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
         local
       </span>
     </div>

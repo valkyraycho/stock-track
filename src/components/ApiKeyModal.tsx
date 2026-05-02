@@ -66,7 +66,7 @@ export function ApiKeyModal({ initialValue, onSave, onCancel }: Props) {
           <button
             type="button"
             onClick={() => setShowKey((s) => !s)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded px-2 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-bone-300 hover:text-bone-50"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-bone-300 hover:text-bone-50"
           >
             {showKey ? "hide" : "show"}
           </button>
@@ -83,7 +83,7 @@ export function ApiKeyModal({ initialValue, onSave, onCancel }: Props) {
         </a>
 
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-300">
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-300">
             <span className="size-1.5 rounded-full bg-[var(--color-ember)]" />
             stored locally · never uploaded
           </div>

@@ -61,7 +61,7 @@ export function HelpModal({ open, onClose }: Props) {
               <Sparkles className="size-4 text-[var(--color-lime)]" />
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
                 reference
               </div>
               <h2 className="font-display text-xl font-semibold leading-none tracking-tight">
@@ -86,7 +86,7 @@ export function HelpModal({ open, onClose }: Props) {
           <DataSourceNotes />
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-white/10 bg-white/[0.02] px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+        <div className="flex items-center justify-between gap-2 border-t border-white/10 bg-white/[0.02] px-6 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
           <span>no account · no backend · your data stays local</span>
           <span className="flex items-center gap-1.5">
             press <Kbd>?</Kbd> anywhere to reopen
@@ -233,7 +233,7 @@ function SectionTitle({
   return (
     <div className="mb-3 flex items-center gap-2">
       <Icon className="size-3.5 text-[var(--color-lime)]" />
-      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
         {label}
       </span>
       <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
@@ -287,7 +287,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-[22px] items-center justify-center rounded border border-white/15 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bone-100">
+    <kbd className="inline-flex min-w-[22px] items-center justify-center rounded border border-white/15 bg-white/5 px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-bone-100">
       {children}
     </kbd>
   );

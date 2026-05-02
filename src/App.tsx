@@ -225,7 +225,7 @@ export default function App() {
         {favorites.length > 0 && (
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-bone-400">
+              <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-bone-400">
                 — watchlist //
               </div>
               <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight md:text-4xl">
@@ -243,7 +243,7 @@ export default function App() {
                 onChange={setViewMode}
                 disabled={allTags.length === 0}
               />
-              <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400 md:flex">
+              <div className="hidden items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400 md:flex">
                 <Kbd>a</Kbd> add · <Kbd>?</Kbd> help
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function App() {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-bone-200">
+    <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[11px] text-bone-200">
       {children}
     </kbd>
   );

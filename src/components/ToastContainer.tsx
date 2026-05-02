@@ -41,7 +41,7 @@ function ToastRow({ toast }: { toast: Toast }) {
             toast.action?.onClick();
             dismissToast(toast.id);
           }}
-          className="rounded px-2 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-lime)] hover:bg-[var(--color-lime)]/10"
+          className="rounded px-2 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-lime)] hover:bg-[var(--color-lime)]/10"
         >
           {toast.action.label}
         </button>

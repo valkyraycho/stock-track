@@ -29,7 +29,7 @@ export function SortControls({ value, onChange }: Props) {
             key={opt.key}
             onClick={() => onChange(opt.key)}
             aria-pressed={active}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] transition ${
               active
                 ? "bg-[var(--color-lime)]/12 text-[var(--color-lime)]"
                 : "text-bone-300 hover:text-bone-100"

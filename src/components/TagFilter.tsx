@@ -15,12 +15,12 @@ export function TagFilter({ allTags, activeTag, onChange }: Props) {
   if (allTags.length === 0) return null;
   return (
     <div className="mb-5 flex flex-wrap items-center gap-2">
-      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400">
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
         filter —
       </span>
       <button
         onClick={() => onChange(null)}
-        className={`rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] transition ${
+        className={`rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] transition ${
           activeTag === null
             ? "bg-[var(--color-lime)]/15 text-[var(--color-lime)]"
             : "border border-white/10 text-bone-300 hover:text-bone-50"
@@ -34,7 +34,7 @@ export function TagFilter({ allTags, activeTag, onChange }: Props) {
           <button
             key={t}
             onClick={() => onChange(active ? null : t)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.15em] transition ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-[0.15em] transition ${
               active
                 ? "bg-[var(--color-iris)]/20 text-[var(--color-iris)]"
                 : "border border-white/10 text-bone-300 hover:text-[var(--color-iris)]"

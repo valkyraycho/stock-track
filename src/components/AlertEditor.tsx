@@ -72,11 +72,11 @@ export function AlertEditor({
     <div className="border-t border-white/5 px-6 py-5">
       <div className="mb-3 flex items-center gap-2">
         <Bell className="size-3.5 text-[var(--color-lime)]" />
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
           price alerts
         </span>
         {perm === "denied" && (
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--color-ember)]">
+          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-ember)]">
             · os notifications blocked
           </span>
         )}
@@ -131,13 +131,13 @@ export function AlertEditor({
         <button
           onClick={() => void create()}
           disabled={!valid}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-lime)] px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-950 transition hover:bg-[#d4ff6b] disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-lime)] px-3 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-950 transition hover:bg-[#d4ff6b] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Plus className="size-3" />
           add alert
         </button>
         {valid && alreadyPast && (
-          <span className="font-mono text-[10px] text-[var(--color-ember)]">
+          <span className="font-mono text-[11px] text-[var(--color-ember)]">
             already {direction === "above" ? "above" : "below"} — will fire on
             next reversal cross.
           </span>
@@ -159,7 +159,7 @@ function DirBtn({
   return (
     <button
       onClick={onClick}
-      className={`rounded-md px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] transition ${
+      className={`rounded-md px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] transition ${
         active
           ? "bg-[var(--color-lime)]/15 text-[var(--color-lime)]"
           : "text-bone-300 hover:text-bone-100"
@@ -198,13 +198,13 @@ function AlertRow({
           ${alert.threshold.toFixed(2)}
         </span>
         {triggered && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-ember)]/15 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-[var(--color-ember)]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-ember)]/15 px-2 py-0.5 text-[11px] uppercase tracking-[0.2em] text-[var(--color-ember)]">
             <Check className="size-2.5" />
             triggered
           </span>
         )}
         {alert.muted && !triggered && (
-          <span className="rounded-full bg-white/5 px-2 py-0.5 text-[9px] uppercase tracking-[0.2em] text-bone-400">
+          <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] uppercase tracking-[0.2em] text-bone-400">
             muted
           </span>
         )}

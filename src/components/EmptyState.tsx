@@ -44,14 +44,14 @@ export function EmptyState({ onAdd, onQuickAdd }: Props) {
 
       <button
         onClick={onAdd}
-        className="group mb-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-lime)] px-6 py-3 font-mono text-xs font-semibold uppercase tracking-[0.25em] text-ink-950 transition hover:bg-[#d4ff6b]"
+        className="group mb-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-lime)] px-6 py-3 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-ink-950 transition hover:bg-[#d4ff6b]"
       >
         <Plus className="size-4" />
         Add your first stock
       </button>
-      <p className="mb-12 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400">
+      <p className="mb-12 font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
         press{" "}
-        <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[10px] text-bone-200">
+        <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[11px] text-bone-200">
           ?
         </kbd>{" "}
         for a quick tour
@@ -59,7 +59,7 @@ export function EmptyState({ onAdd, onQuickAdd }: Props) {
 
       {/* Quick add row */}
       <div className="w-full">
-        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400">
+        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
           — or try one of these ——————————————————
         </div>
         <div className="flex flex-wrap justify-center gap-2">

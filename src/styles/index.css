@@ -25,11 +25,11 @@
   --color-ink-600: #24243a;
   --color-ink-500: #3a3a55;
 
-  --color-bone-50: #f7f5ee;
-  --color-bone-100: #e8e6df;
-  --color-bone-200: #c9c6bc;
-  --color-bone-300: #918f85;
-  --color-bone-400: #5c5a52;
+  --color-bone-50: #faf8f1;
+  --color-bone-100: #ece9e0;
+  --color-bone-200: #d6d2c5; /* body text (was #c9c6bc, bumped for contrast) */
+  --color-bone-300: #b5b1a3; /* secondary / meta (was #918f85 — now ~8.8:1) */
+  --color-bone-400: #8c8a7c; /* tertiary / caption (was #5c5a52, failed AA) */
 
   --color-gain: #00ff9f;
   --color-gain-soft: #16d99a;
@@ -70,6 +70,14 @@
   .tabular,
   .font-mono {
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Small uppercase labels at the default weight (400) render too spidery on
+     dark backgrounds. Bumping to 500 gives the letters enough stroke weight
+     to stay crisp at 10-12px without looking heavy. We target the exact
+     shape we use everywhere: mono + uppercase. */
+  .font-mono.uppercase {
+    font-weight: 500;
   }
 
   /* Reset focus ring to match palette */
@@ -173,8 +181,12 @@
    Kept as a component class so border + blur + inset highlight stay together.
    ────────────────────────────────────────────────────────────────────────── */
 @layer components {
+  /* Glass is slightly more opaque than before (80% vs 70%) so small dim
+     text has a stable ground and doesn't get the "halo" effect from
+     the blurred background blobs bleeding through. Visual glass feel
+     is preserved because the blur is still active. */
   .glass {
-    background: color-mix(in oklab, var(--color-ink-900) 70%, transparent);
+    background: color-mix(in oklab, var(--color-ink-900) 82%, transparent);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -184,7 +196,7 @@
   }
 
   .glass-strong {
-    background: color-mix(in oklab, var(--color-ink-900) 85%, transparent);
+    background: color-mix(in oklab, var(--color-ink-900) 92%, transparent);
     backdrop-filter: blur(32px) saturate(160%);
     -webkit-backdrop-filter: blur(32px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.1);

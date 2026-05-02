@@ -179,7 +179,7 @@ export function AddStockDialog({
           {searching && (
             <Loader2 className="size-4 animate-spin text-[var(--color-lime)]" />
           )}
-          <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-bone-300">
+          <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-bone-300">
             esc
           </kbd>
           <button
@@ -227,7 +227,7 @@ export function AddStockDialog({
                       {r.symbol}
                     </span>
                     {existing && (
-                      <span className="flex items-center gap-1 rounded bg-[var(--color-ember)]/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[var(--color-ember)]">
+                      <span className="flex items-center gap-1 rounded bg-[var(--color-ember)]/15 px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-[var(--color-ember)]">
                         <Check className="size-2.5" />
                         added
                       </span>
@@ -251,7 +251,7 @@ export function AddStockDialog({
           })}
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-white/10 px-5 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
+        <div className="flex items-center justify-between gap-2 border-t border-white/10 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
           <span>us common stocks · via finnhub /search</span>
           <span className="flex items-center gap-1.5">
             <Kbd>↑</Kbd>
@@ -273,7 +273,7 @@ function EmptyHint({ message }: { message: string }) {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[9px] text-bone-300">
+    <kbd className="rounded border border-white/15 bg-white/5 px-1.5 py-0.5 text-[11px] text-bone-300">
       {children}
     </kbd>
   );

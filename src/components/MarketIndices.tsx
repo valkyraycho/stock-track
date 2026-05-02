@@ -28,7 +28,7 @@ export function MarketIndices({ token }: Props) {
   return (
     <div className="glass mb-6 flex flex-wrap items-stretch divide-white/5 overflow-hidden rounded-xl md:divide-x">
       <div className="flex items-center gap-2 px-4 py-3 md:py-2">
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-400">
           — indices
         </span>
       </div>
@@ -81,10 +81,10 @@ function IndexCell({
   return (
     <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-4 py-2 md:min-w-[180px]">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-300">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
           {symbol}
         </span>
-        <span className="truncate font-sans text-[10px] text-bone-400">
+        <span className="truncate font-sans text-[11px] text-bone-400">
           {label}
         </span>
       </div>
