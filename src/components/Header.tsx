@@ -1,4 +1,4 @@
-import { Plus, Settings2 } from "lucide-react";
+import { Plus, Settings2, HelpCircle } from "lucide-react";
 import { useFinnhubConnectionState } from "../hooks/useFinnhubSocket";
 import { PortfolioSummary } from "./PortfolioSummary";
 import type { Favorite } from "../types";
@@ -6,6 +6,7 @@ import type { Favorite } from "../types";
 type Props = {
   onAdd: () => void;
   onOpenSettings: () => void;
+  onOpenHelp: () => void;
   favoritesCount: number;
   favorites: Favorite[];
 };
@@ -17,6 +18,7 @@ type Props = {
 export function Header({
   onAdd,
   onOpenSettings,
+  onOpenHelp,
   favoritesCount,
   favorites,
 }: Props) {
@@ -43,6 +45,14 @@ export function Header({
               {favoritesCount.toString().padStart(2, "0")}
               <span className="text-bone-400"> / watching</span>
             </div>
+            <button
+              onClick={onOpenHelp}
+              aria-label="Help and shortcuts"
+              title="Help (?)"
+              className="rounded-lg border border-white/10 bg-white/5 p-2.5 text-bone-200 transition hover:border-white/20 hover:text-bone-50"
+            >
+              <HelpCircle className="size-4" />
+            </button>
             <button
               onClick={onOpenSettings}
               aria-label="Settings"

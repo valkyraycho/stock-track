@@ -14,6 +14,7 @@ import { TagFilter } from "./components/TagFilter";
 import { ViewModeToggle, type ViewMode } from "./components/ViewModeToggle";
 import { GroupedStockGrid } from "./components/GroupedStockGrid";
 import { AlertWatcher } from "./components/AlertWatcher";
+import { HelpModal } from "./components/HelpModal";
 import { useFavorites } from "./hooks/useFavorites";
 import { useAlerts } from "./hooks/useAlerts";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -40,6 +41,7 @@ export default function App() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [openSymbol, setOpenSymbol] = useState<string | null>(null);
   const [sortKey, setSortKey] = useLocalStorage<SortKey>(
     "stock-track:sort",
@@ -184,12 +186,15 @@ export default function App() {
     [token, has, add]
   );
 
-  // Global shortcut: "a" opens add dialog.
+  // Global keyboard shortcuts. We skip when the user is typing in a field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
       if (e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "a" && !e.metaKey && !e.ctrlKey) setAddOpen(true);
+      if (e.metaKey || e.ctrlKey) return;
+      if (e.key === "a") setAddOpen(true);
+      // `?` is shift+/ on US keyboards; we accept both forms.
+      else if (e.key === "?") setHelpOpen(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -208,6 +213,7 @@ export default function App() {
       <Header
         onAdd={() => setAddOpen(true)}
         onOpenSettings={() => setKeyModalOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
         favoritesCount={favorites.length}
         favorites={favorites}
       />
@@ -238,7 +244,7 @@ export default function App() {
                 disabled={allTags.length === 0}
               />
               <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400 md:flex">
-                press <Kbd>a</Kbd> to add
+                <Kbd>a</Kbd> add · <Kbd>?</Kbd> help
               </div>
             </div>
           </div>
@@ -289,6 +295,8 @@ export default function App() {
       />
 
       <ToastContainer />
+
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {(needsKey || keyModalOpen) && (
         <ApiKeyModal
