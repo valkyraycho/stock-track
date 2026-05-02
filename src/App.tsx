@@ -24,7 +24,7 @@ export default function App() {
   const envKey = import.meta.env.VITE_FINNHUB_API_KEY || null;
   const token = storedKey || envKey;
 
-  const { favorites, add, remove, has } = useFavorites();
+  const { favorites, add, remove, has, setPosition } = useFavorites();
 
   const [addOpen, setAddOpen] = useState(false);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
@@ -175,6 +175,7 @@ export default function App() {
         onAdd={() => setAddOpen(true)}
         onOpenSettings={() => setKeyModalOpen(true)}
         favoritesCount={favorites.length}
+        favorites={favorites}
       />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10 md:px-10 md:py-14">
@@ -253,6 +254,7 @@ export default function App() {
           token={token}
           onClose={() => setOpenSymbol(null)}
           onRemove={removeWithUndo}
+          onUpdatePosition={setPosition}
         />
       )}
     </div>

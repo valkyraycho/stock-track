@@ -10,7 +10,8 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useFinnhubSocket } from "../hooks/useFinnhubSocket";
 import { quote as fetchQuote } from "../lib/finnhub";
 import { NewsPanel } from "./NewsPanel";
-import type { Favorite, Profile, Quote, TradeTick } from "../types";
+import { PositionEditor } from "./PositionEditor";
+import type { Favorite, Position, Profile, Quote, TradeTick } from "../types";
 import { formatRelative } from "../lib/marketHours";
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
   token: string;
   onClose: () => void;
   onRemove: (symbol: string) => void;
+  onUpdatePosition: (symbol: string, position: Position | undefined) => void;
 };
 
 /**
@@ -36,6 +38,7 @@ export function StockDetailModal({
   token,
   onClose,
   onRemove,
+  onUpdatePosition,
 }: Props) {
   const [seed, setSeed] = useState<Quote | null>(null);
   const [price, setPrice] = useState<number | null>(null);
@@ -224,6 +227,14 @@ export function StockDetailModal({
             value={new Date(favorite.addedAt).toLocaleDateString()}
           />
         </div>
+
+        {/* Position editor */}
+        <PositionEditor
+          symbol={favorite.symbol}
+          position={favorite.position}
+          currentPrice={price}
+          onSave={(next) => onUpdatePosition(favorite.symbol, next)}
+        />
 
         {/* News */}
         <NewsPanel symbol={favorite.symbol} token={token} />

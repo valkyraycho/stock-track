@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { X, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 import { quote as fetchQuote } from "../lib/finnhub";
 import { useFinnhubSocket } from "../hooks/useFinnhubSocket";
-import type { Favorite, Quote, TradeTick } from "../types";
+import { setLivePrice } from "../lib/livePrices";
+import type { Favorite, Position, Quote, TradeTick } from "../types";
 import { formatRelative } from "../lib/marketHours";
 
 type Props = {
@@ -62,6 +63,7 @@ export function StockCard({
         // Seed sparkline with the four known static points PLUS current —
         // gives the card visual bulk before any live ticks arrive.
         setSparkPoints([q.pc, q.o, q.l, q.h, q.c]);
+        setLivePrice(favorite.symbol, q.c);
         // Publish change % so App can sort by it.
         if (q.dp !== null) {
           onSeed(favorite.symbol, { dp: q.dp, c: q.c });
@@ -73,24 +75,28 @@ export function StockCard({
     };
   }, [favorite.symbol, token, onSeed]);
 
-  const onTick = useCallback((t: TradeTick) => {
-    const prev = lastPriceRef.current;
-    lastPriceRef.current = t.p;
-    setPrice(t.p);
-    setLastTickAt(Date.now());
-    setSparkPoints((pts) => {
-      const next = pts.length >= MAX_SPARK_POINTS ? pts.slice(1) : pts.slice();
-      next.push(t.p);
-      return next;
-    });
-    const el = rootRef.current;
-    if (el && prev !== null && t.p !== prev) {
-      const cls = t.p > prev ? "flash-gain" : "flash-loss";
-      el.classList.remove("flash-gain", "flash-loss");
-      void el.offsetWidth;
-      el.classList.add(cls);
-    }
-  }, []);
+  const onTick = useCallback(
+    (t: TradeTick) => {
+      const prev = lastPriceRef.current;
+      lastPriceRef.current = t.p;
+      setPrice(t.p);
+      setLivePrice(favorite.symbol, t.p);
+      setLastTickAt(Date.now());
+      setSparkPoints((pts) => {
+        const next = pts.length >= MAX_SPARK_POINTS ? pts.slice(1) : pts.slice();
+        next.push(t.p);
+        return next;
+      });
+      const el = rootRef.current;
+      if (el && prev !== null && t.p !== prev) {
+        const cls = t.p > prev ? "flash-gain" : "flash-loss";
+        el.classList.remove("flash-gain", "flash-loss");
+        void el.offsetWidth;
+        el.classList.add(cls);
+      }
+    },
+    [favorite.symbol]
+  );
 
   useFinnhubSocket(token, favorite.symbol, onTick);
 
@@ -201,6 +207,14 @@ export function StockCard({
         <FreshnessLabel lastTickAt={lastTickAt} isStale={isStale} />
       </div>
 
+      {/* Position row — only when user has entered shares */}
+      {favorite.position && favorite.position.shares > 0 && (
+        <PositionLine
+          position={favorite.position}
+          price={price}
+        />
+      )}
+
       {/* Sparkline */}
       <div className="mt-4 h-14">
         <Sparkline points={sparkPoints} up={isUp} />
@@ -246,6 +260,59 @@ function FreshnessLabel({
       {formatRelative(lastTickAt)}
     </span>
   );
+}
+
+/**
+ * Subtle strip showing "N shares · $value (+$pl, +pct%)" when a position exists.
+ * Only shown if shares > 0. P/L only shown if avgCost is set.
+ */
+function PositionLine({
+  position,
+  price,
+}: {
+  position: Position;
+  price: number | null;
+}) {
+  const value = price !== null ? price * position.shares : null;
+  const cost = position.avgCost
+    ? position.avgCost * position.shares
+    : null;
+  const pl = value !== null && cost !== null ? value - cost : null;
+  const plPct =
+    pl !== null && cost !== null && cost > 0 ? (pl / cost) * 100 : null;
+  const isUp = pl !== null && pl >= 0;
+  return (
+    <div className="mt-3 flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+      <Wallet className="size-3 shrink-0 text-[var(--color-lime)]" />
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-bone-300">
+        {formatShares(position.shares)} sh
+      </span>
+      <span className="ml-auto font-mono text-xs text-bone-100 tabular">
+        {value !== null
+          ? value.toLocaleString("en-US", {
+              style: "currency",
+              currency: "USD",
+              maximumFractionDigits: 0,
+            })
+          : "—"}
+      </span>
+      {pl !== null && plPct !== null && (
+        <span
+          className={`font-mono text-[10px] tabular ${
+            isUp ? "text-[var(--color-gain)]" : "text-[var(--color-loss)]"
+          }`}
+        >
+          {isUp ? "+" : ""}
+          {plPct.toFixed(2)}%
+        </span>
+      )}
+    </div>
+  );
+}
+
+function formatShares(n: number): string {
+  // Allow fractional shares (Robinhood-style). Up to 4 decimals.
+  return n.toLocaleString("en-US", { maximumFractionDigits: 4 });
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

@@ -1,12 +1,13 @@
 import { useCallback } from "react";
 import { useLocalStorage } from "./useLocalStorage";
-import type { Favorite } from "../types";
+import type { Favorite, Position } from "../types";
 
 const KEY = "stock-track:favorites";
 
 /**
- * CRUD layer over the favorites array. Thin on purpose — the component
- * should never reach into localStorage directly.
+ * CRUD layer over the favorites array.
+ * Position and tags are stored inline on each Favorite for locality —
+ * everything you need for a row is one object.
  */
 export function useFavorites() {
   const [favorites, setFavorites] = useLocalStorage<Favorite[]>(KEY, []);
@@ -14,7 +15,6 @@ export function useFavorites() {
   const add = useCallback(
     (fav: Favorite) =>
       setFavorites((prev) => {
-        // Idempotent: don't duplicate if the user adds the same ticker twice.
         if (prev.some((f) => f.symbol === fav.symbol)) return prev;
         return [fav, ...prev];
       }),
@@ -32,5 +32,41 @@ export function useFavorites() {
     [favorites]
   );
 
-  return { favorites, add, remove, has };
+  /**
+   * Set or clear a position. Pass undefined to clear.
+   * Passing { shares: 0 } also clears — treating 0 as "no position" is
+   * friendlier than forcing users to hunt for a remove button.
+   */
+  const setPosition = useCallback(
+    (symbol: string, position: Position | undefined) =>
+      setFavorites((prev) =>
+        prev.map((f) => {
+          if (f.symbol !== symbol) return f;
+          if (!position || position.shares <= 0) {
+            const { position: _drop, ...rest } = f;
+            return rest;
+          }
+          return { ...f, position };
+        })
+      ),
+    [setFavorites]
+  );
+
+  /** Replace the tag list for a symbol. Empty array clears. */
+  const setTags = useCallback(
+    (symbol: string, tags: string[]) =>
+      setFavorites((prev) =>
+        prev.map((f) => {
+          if (f.symbol !== symbol) return f;
+          if (tags.length === 0) {
+            const { tags: _drop, ...rest } = f;
+            return rest;
+          }
+          return { ...f, tags };
+        })
+      ),
+    [setFavorites]
+  );
+
+  return { favorites, add, remove, has, setPosition, setTags };
 }

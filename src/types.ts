@@ -7,6 +7,13 @@
  * every quote. We document each field instead.
  */
 
+/** Optional per-favorite position. If `shares` > 0, the card shows a
+ *  position value. `avgCost` is optional; when set we also show P/L. */
+export type Position = {
+  shares: number;
+  avgCost?: number;
+};
+
 /** A favorite entry persisted in localStorage. Slim by design: heavier
  *  profile data (logo, industry, etc.) is cached separately. */
 export type Favorite = {
@@ -16,6 +23,10 @@ export type Favorite = {
   logo: string;
   /** ISO timestamp so we can sort/newest-first if we ever want to. */
   addedAt: string;
+  /** Optional user-entered position. Absent for pure-watchlist tickers. */
+  position?: Position;
+  /** Optional user-provided tags for grouping/filtering. */
+  tags?: string[];
 };
 
 /** Finnhub /quote response. All numeric. `t` is a UNIX-seconds timestamp. */

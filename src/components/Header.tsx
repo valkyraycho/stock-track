@@ -1,17 +1,25 @@
 import { Plus, Settings2 } from "lucide-react";
 import { useFinnhubConnectionState } from "../hooks/useFinnhubSocket";
+import { PortfolioSummary } from "./PortfolioSummary";
+import type { Favorite } from "../types";
 
 type Props = {
   onAdd: () => void;
   onOpenSettings: () => void;
   favoritesCount: number;
+  favorites: Favorite[];
 };
 
 /**
  * Top bar. The visual anchor of the app.
  * Holds the brand, connection status, a live clock, and the primary action.
  */
-export function Header({ onAdd, onOpenSettings, favoritesCount }: Props) {
+export function Header({
+  onAdd,
+  onOpenSettings,
+  favoritesCount,
+  favorites,
+}: Props) {
   const connState = useFinnhubConnectionState();
   const isLive = connState === "open";
 
@@ -26,6 +34,7 @@ export function Header({ onAdd, onOpenSettings, favoritesCount }: Props) {
             <ConnectionBadge live={isLive} state={connState} />
             <span className="hidden h-8 w-px bg-white/10 md:block" />
             <LiveClock className="hidden md:flex" />
+            <PortfolioSummary favorites={favorites} />
           </div>
 
           {/* Actions */}
