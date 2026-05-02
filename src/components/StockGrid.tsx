@@ -5,13 +5,17 @@ type Props = {
   favorites: Favorite[];
   token: string;
   onRemove: (symbol: string) => void;
+  onOpen: (symbol: string) => void;
+  onSeed: (symbol: string, seed: { dp: number; c: number }) => void;
 };
 
-/**
- * Responsive grid of StockCard. Intentionally not a masonry — equal heights
- * read more like a proper financial dashboard than a Pinterest board.
- */
-export function StockGrid({ favorites, token, onRemove }: Props) {
+export function StockGrid({
+  favorites,
+  token,
+  onRemove,
+  onOpen,
+  onSeed,
+}: Props) {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {favorites.map((fav, i) => (
@@ -21,6 +25,8 @@ export function StockGrid({ favorites, token, onRemove }: Props) {
           token={token}
           index={i}
           onRemove={onRemove}
+          onOpen={onOpen}
+          onSeed={onSeed}
         />
       ))}
     </div>

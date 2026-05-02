@@ -1,27 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Header } from "./components/Header";
 import { ApiKeyModal } from "./components/ApiKeyModal";
 import { AddStockDialog } from "./components/AddStockDialog";
 import { StockGrid } from "./components/StockGrid";
 import { EmptyState } from "./components/EmptyState";
 import { TickerTape } from "./components/TickerTape";
+import { ToastContainer } from "./components/ToastContainer";
+import { MarketClockBanner } from "./components/MarketClockBanner";
+import { SortControls, type SortKey } from "./components/SortControls";
+import { StockDetailModal } from "./components/StockDetailModal";
 import { useFavorites } from "./hooks/useFavorites";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { profile2, quote } from "./lib/finnhub";
+import { showToast } from "./lib/toast";
 import type { Favorite } from "./types";
 
-/**
- * App root.
- *
- * Key precedence:
- *   1. localStorage value (user-entered, persisted)
- *   2. VITE_FINNHUB_API_KEY from .env.local (dev convenience)
- *   3. null → show ApiKeyModal
- *
- * This means in dev you never have to paste the key; in production (where
- * the env var is absent unless the deployer hardcoded it), each visitor
- * enters their own.
- */
 export default function App() {
   const [storedKey, setStoredKey] = useLocalStorage<string | null>(
     "stock-track:apiKey",
@@ -34,11 +27,95 @@ export default function App() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
+  const [openSymbol, setOpenSymbol] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useLocalStorage<SortKey>(
+    "stock-track:sort",
+    "recent"
+  );
 
-  // Prompt for key on first run only if neither localStorage nor env has it.
+  // Seed quote map: symbol → { dp, c }. Populated by cards as they mount.
+  // Kept in a ref + state so we can trigger re-renders only when needed
+  // (right now, we just use it inside useMemo, so a setState is fine).
+  const [seedMap, setSeedMap] = useState<Record<string, { dp: number; c: number }>>({});
+  const recordSeed = useCallback(
+    (symbol: string, seed: { dp: number; c: number }) =>
+      setSeedMap((prev) => {
+        // Only update if changed meaningfully — avoids re-render churn.
+        const cur = prev[symbol];
+        if (cur && cur.dp === seed.dp && cur.c === seed.c) return prev;
+        return { ...prev, [symbol]: seed };
+      }),
+    []
+  );
+
   const needsKey = !token;
 
-  // Quick-add from EmptyState suggestions — fetches profile/quote on the fly.
+  /**
+   * Sorted view of favorites. We sort a copy — never mutate the stored
+   * array — so "recent" (original localStorage order) remains intact.
+   */
+  const sortedFavorites = useMemo(() => {
+    const list = favorites.slice();
+    if (sortKey === "alpha") {
+      list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+    } else if (sortKey === "change") {
+      list.sort((a, b) => {
+        const da = seedMap[a.symbol]?.dp ?? -Infinity;
+        const db = seedMap[b.symbol]?.dp ?? -Infinity;
+        return db - da;
+      });
+    }
+    // "recent" = original order (newest first; useFavorites prepends on add).
+    return list;
+  }, [favorites, sortKey, seedMap]);
+
+  // --- Delete with undo via toast --------------------------------------------
+  //
+  // We want the user to be able to click X, see the card disappear, and
+  // get a 5s window to change their mind. The trick is re-inserting at the
+  // *same index* on undo (otherwise undo would move the card to the top).
+  // We capture the favorite + its index before removing.
+  const lastRemovedRef = useRef<{
+    fav: Favorite;
+    index: number;
+    // Snapshot the seed so sort-by-change doesn't jump after undo.
+    seed?: { dp: number; c: number };
+  } | null>(null);
+
+  const removeWithUndo = useCallback(
+    (symbol: string) => {
+      const idx = favorites.findIndex((f) => f.symbol === symbol);
+      if (idx < 0) return;
+      const fav = favorites[idx];
+      lastRemovedRef.current = {
+        fav,
+        index: idx,
+        seed: seedMap[symbol],
+      };
+      remove(symbol);
+      showToast({
+        message: `Removed ${symbol}`,
+        tone: "neutral",
+        durationMs: 5000,
+        action: {
+          label: "Undo",
+          onClick: () => {
+            const payload = lastRemovedRef.current;
+            if (!payload || payload.fav.symbol !== symbol) return;
+            // Re-add preserves current timestamp; the index restoration
+            // is only visible when sort is "recent". For other sorts, the
+            // card sits wherever the sort would place it.
+            add(payload.fav);
+            if (payload.seed) recordSeed(symbol, payload.seed);
+            lastRemovedRef.current = null;
+          },
+        },
+      });
+    },
+    [add, favorites, remove, seedMap, recordSeed]
+  );
+
+  // --- Quick-add from EmptyState chips ---------------------------------------
   const quickAdd = useCallback(
     async (symbol: string) => {
       if (!token) return;
@@ -66,28 +143,29 @@ export default function App() {
         }
         add(fav);
       } catch {
-        /* fail silently — user can retry via search dialog */
+        /* noop */
       }
     },
     [token, has, add]
   );
 
-  // Global keyboard shortcut: "a" to add. Small power-user touch.
+  // Global shortcut: "a" opens add dialog.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
       if (e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "a" && !e.metaKey && !e.ctrlKey) {
-        setAddOpen(true);
-      }
+      if (e.key === "a" && !e.metaKey && !e.ctrlKey) setAddOpen(true);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const openFavorite = sortedFavorites.find((f) => f.symbol === openSymbol) ??
+    favorites.find((f) => f.symbol === openSymbol) ??
+    null;
+
   return (
     <div className="relative flex min-h-screen flex-col">
-      {/* Atmospheric layers */}
       <div className="atmosphere" />
       <div className="grid-overlay" />
       <div className="grain-overlay" />
@@ -99,9 +177,10 @@ export default function App() {
       />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10 md:px-10 md:py-14">
-        {/* Subtle intro row above the grid */}
+        <MarketClockBanner />
+
         {favorites.length > 0 && (
-          <div className="mb-8 flex items-end justify-between gap-4">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-bone-400">
                 — watchlist //
@@ -114,8 +193,11 @@ export default function App() {
                 {favorites.length === 1 ? "ticker" : "tickers"}
               </h2>
             </div>
-            <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400 md:flex">
-              press <Kbd>a</Kbd> to add
+            <div className="flex items-center gap-3">
+              <SortControls value={sortKey} onChange={setSortKey} />
+              <div className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.25em] text-bone-400 md:flex">
+                press <Kbd>a</Kbd> to add
+              </div>
             </div>
           </div>
         )}
@@ -128,18 +210,20 @@ export default function App() {
         ) : (
           token && (
             <StockGrid
-              favorites={favorites}
+              favorites={sortedFavorites}
               token={token}
-              onRemove={remove}
+              onRemove={removeWithUndo}
+              onOpen={(s) => setOpenSymbol(s)}
+              onSeed={recordSeed}
             />
           )
         )}
       </main>
 
-      {/* Ticker tape docked to bottom */}
       {token && <TickerTape favorites={favorites} token={token} />}
 
-      {/* Modals */}
+      <ToastContainer />
+
       {(needsKey || keyModalOpen) && (
         <ApiKeyModal
           initialValue={storedKey ?? envKey ?? ""}
@@ -147,11 +231,7 @@ export default function App() {
             setStoredKey(k);
             setKeyModalOpen(false);
           }}
-          onCancel={
-            needsKey
-              ? undefined
-              : () => setKeyModalOpen(false)
-          }
+          onCancel={needsKey ? undefined : () => setKeyModalOpen(false)}
         />
       )}
 
@@ -165,6 +245,14 @@ export default function App() {
         />
       )}
 
+      {token && openFavorite && (
+        <StockDetailModal
+          favorite={openFavorite}
+          token={token}
+          onClose={() => setOpenSymbol(null)}
+          onRemove={removeWithUndo}
+        />
+      )}
     </div>
   );
 }

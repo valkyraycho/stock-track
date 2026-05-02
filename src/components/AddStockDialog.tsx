@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X, Loader2, TrendingUp } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Search, X, Loader2, TrendingUp, Check } from "lucide-react";
 import { search as finnhubSearch, quote, profile2 } from "../lib/finnhub";
+import { useFocusTrap } from "../hooks/useFocusTrap";
+import { showToast } from "../lib/toast";
 import type { Favorite, SearchResult } from "../types";
 
 type Props = {
@@ -13,9 +15,13 @@ type Props = {
 
 /**
  * Add-stock search dialog.
- * - Debounced input (220 ms) to avoid hammering /search on every keystroke.
- * - Arrow key navigation + enter to select — finance users live in keyboards.
- * - Selecting fetches profile + quote in parallel, then calls onAdd().
+ *
+ * Key UX change vs v1: after a successful add, the dialog STAYS OPEN.
+ * The input clears, focus returns to it, and a toast confirms the add.
+ * This makes adding a watchlist of 5+ stocks one continuous flow instead
+ * of 5 round-trips through the "click + Add Stock" button.
+ *
+ * Close only on Esc / the X / backdrop click.
  */
 export function AddStockDialog({
   token,
@@ -31,13 +37,14 @@ export function AddStockDialog({
   const [activeIdx, setActiveIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Refocus input every time the dialog opens.
+  useFocusTrap(dialogRef, open);
+
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  // Reset transient state when closed so the next open starts clean.
   useEffect(() => {
     if (!open) {
       setQuery("");
@@ -47,7 +54,6 @@ export function AddStockDialog({
     }
   }, [open]);
 
-  // Debounced search. Using a ref-captured latest query avoids stale closures.
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
@@ -74,15 +80,15 @@ export function AddStockDialog({
   const addEntry = useMemo(
     () => async (r: SearchResult) => {
       if (isAlreadyAdded(r.symbol)) {
-        onClose();
+        showToast({
+          message: `${r.symbol} is already in your watchlist`,
+          tone: "warning",
+          durationMs: 3000,
+        });
         return;
       }
       setAdding(r.symbol);
       try {
-        // Fetch profile + quote in parallel — both are cheap and independent.
-        // Quote isn't used directly here (StockCard refetches its own on mount)
-        // but a failing /quote here is a good early signal that the symbol
-        // is tradable & the key works for this endpoint.
         const [prof] = await Promise.all([
           profile2(r.symbol, token).catch(() => null),
           quote(r.symbol, token).catch(() => null),
@@ -93,7 +99,6 @@ export function AddStockDialog({
           logo: prof?.logo || "",
           addedAt: new Date().toISOString(),
         };
-        // Cache profile for fast re-render next session.
         if (prof) {
           try {
             localStorage.setItem(
@@ -101,35 +106,46 @@ export function AddStockDialog({
               JSON.stringify(prof)
             );
           } catch {
-            /* storage full — ignore */
+            /* noop */
           }
         }
         onAdd(fav);
-        onClose();
+        showToast({
+          message: `Added ${r.symbol}`,
+          tone: "success",
+          durationMs: 2400,
+        });
+        // Keep-open: clear and refocus rather than closing.
+        setQuery("");
+        setResults([]);
+        setActiveIdx(0);
+        inputRef.current?.focus();
       } catch (e) {
         setError((e as Error).message);
       } finally {
         setAdding(null);
       }
     },
-    [isAlreadyAdded, onAdd, onClose, token]
+    [isAlreadyAdded, onAdd, token]
   );
 
-  // Keyboard nav
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIdx((i) => Math.min(i + 1, results.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIdx((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && results[activeIdx]) {
-      e.preventDefault();
-      void addEntry(results[activeIdx]);
-    } else if (e.key === "Escape") {
-      onClose();
-    }
-  };
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIdx((i) => Math.min(i + 1, results.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIdx((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter" && results[activeIdx]) {
+        e.preventDefault();
+        void addEntry(results[activeIdx]);
+      } else if (e.key === "Escape") {
+        onClose();
+      }
+    },
+    [activeIdx, addEntry, onClose, results]
+  );
 
   if (!open) return null;
 
@@ -140,7 +156,13 @@ export function AddStockDialog({
         onClick={onClose}
       />
 
-      <div className="glass-strong relative w-full max-w-2xl overflow-hidden rounded-[var(--radius-card)]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="glass-strong relative w-full max-w-2xl overflow-hidden rounded-[var(--radius-card)]"
+      >
         {/* Input row */}
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
           <Search className="size-4 text-bone-300" />
@@ -169,7 +191,6 @@ export function AddStockDialog({
           </button>
         </div>
 
-        {/* Results */}
         <div className="max-h-[50vh] overflow-y-auto">
           {error && (
             <div className="px-5 py-4 text-sm text-[var(--color-loss)]">
@@ -181,7 +202,9 @@ export function AddStockDialog({
             <EmptyHint message="No matching US common stocks." />
           )}
 
-          {!error && !query && <EmptyHint message="Start typing to search." />}
+          {!error && !query && (
+            <EmptyHint message="Start typing to search. Dialog stays open — add as many as you like." />
+          )}
 
           {results.map((r, i) => {
             const existing = isAlreadyAdded(r.symbol);
@@ -204,8 +227,9 @@ export function AddStockDialog({
                       {r.symbol}
                     </span>
                     {existing && (
-                      <span className="rounded bg-[var(--color-ember)]/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[var(--color-ember)]">
-                        already watching
+                      <span className="flex items-center gap-1 rounded bg-[var(--color-ember)]/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[var(--color-ember)]">
+                        <Check className="size-2.5" />
+                        added
                       </span>
                     )}
                   </div>
@@ -218,9 +242,7 @@ export function AddStockDialog({
                 ) : (
                   <TrendingUp
                     className={`size-4 ${
-                      isActive
-                        ? "text-[var(--color-lime)]"
-                        : "text-bone-400"
+                      isActive ? "text-[var(--color-lime)]" : "text-bone-400"
                     }`}
                   />
                 )}
@@ -229,12 +251,11 @@ export function AddStockDialog({
           })}
         </div>
 
-        {/* Footer hint */}
         <div className="flex items-center justify-between gap-2 border-t border-white/10 px-5 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-400">
           <span>us common stocks · via finnhub /search</span>
           <span className="flex items-center gap-1.5">
             <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd> navigate · <Kbd>↵</Kbd> add
+            <Kbd>↓</Kbd> navigate · <Kbd>↵</Kbd> add · <Kbd>esc</Kbd> done
           </span>
         </div>
       </div>
@@ -244,7 +265,7 @@ export function AddStockDialog({
 
 function EmptyHint({ message }: { message: string }) {
   return (
-    <div className="flex items-center justify-center py-10 font-mono text-xs uppercase tracking-[0.2em] text-bone-400">
+    <div className="flex items-center justify-center py-10 text-center font-mono text-xs uppercase tracking-[0.2em] text-bone-400">
       {message}
     </div>
   );

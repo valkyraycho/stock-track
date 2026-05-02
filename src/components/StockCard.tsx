@@ -3,12 +3,16 @@ import { X, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { quote as fetchQuote } from "../lib/finnhub";
 import { useFinnhubSocket } from "../hooks/useFinnhubSocket";
 import type { Favorite, Quote, TradeTick } from "../types";
+import { formatRelative } from "../lib/marketHours";
 
 type Props = {
   favorite: Favorite;
   token: string;
   index: number;
   onRemove: (symbol: string) => void;
+  onOpen: (symbol: string) => void;
+  /** Called once when the seed /quote succeeds — App uses this for sorting. */
+  onSeed: (symbol: string, seed: { dp: number; c: number }) => void;
 };
 
 const MAX_SPARK_POINTS = 80;
@@ -16,25 +20,37 @@ const MAX_SPARK_POINTS = 80;
 /**
  * Single stock card.
  *
- * Lifecycle:
- *   1. On mount, call /quote once to seed price + previousClose.
- *   2. Subscribe to WebSocket ticks for the symbol.
- *   3. Each tick updates the displayed price, triggers a flash animation,
- *      and pushes a point into the sparkline buffer.
+ * On mount: fetch /quote, seed sparkline with the four static known
+ * points (prev close, open, low, high, current), subscribe to WS ticks.
+ * On tick: update price via ref-toggled class for flash (no re-render
+ * cascade), append to sparkline buffer, update `lastTickAt`.
  *
- * The flash class is toggled via ref (not state) to avoid re-rendering the
- * whole card on every tick. The sparkline is an inline SVG path we recompute
- * from an in-memory circular buffer.
+ * The whole card is a button so keyboard users can Tab to it and press
+ * Enter/Space to open the detail modal — same interaction as clicking.
  */
-export function StockCard({ favorite, token, index, onRemove }: Props) {
+export function StockCard({
+  favorite,
+  token,
+  index,
+  onRemove,
+  onOpen,
+  onSeed,
+}: Props) {
   const [seed, setSeed] = useState<Quote | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [sparkPoints, setSparkPoints] = useState<number[]>([]);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [lastTickAt, setLastTickAt] = useState<number | null>(null);
+  const rootRef = useRef<HTMLButtonElement>(null);
   const lastPriceRef = useRef<number | null>(null);
+  // Force a re-render every second so the "Xs ago" label updates without
+  // touching price state (which would trigger redundant flash logic).
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
-  // 1) Seed from REST on mount. We intentionally don't retry —
-  // the UI stays usable (just without daily % change) if this call fails.
+  // Seed from /quote.
   useEffect(() => {
     let cancelled = false;
     fetchQuote(favorite.symbol, token)
@@ -43,35 +59,34 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
         setSeed(q);
         setPrice(q.c);
         lastPriceRef.current = q.c;
-        setSparkPoints([q.c]);
+        // Seed sparkline with the four known static points PLUS current —
+        // gives the card visual bulk before any live ticks arrive.
+        setSparkPoints([q.pc, q.o, q.l, q.h, q.c]);
+        // Publish change % so App can sort by it.
+        if (q.dp !== null) {
+          onSeed(favorite.symbol, { dp: q.dp, c: q.c });
+        }
       })
-      .catch(() => {
-        /* card still renders; just shows dashes for derived metrics */
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [favorite.symbol, token]);
+  }, [favorite.symbol, token, onSeed]);
 
-  // 2) Handle live ticks.
-  const onTick = useCallback((tick: TradeTick) => {
+  const onTick = useCallback((t: TradeTick) => {
     const prev = lastPriceRef.current;
-    lastPriceRef.current = tick.p;
-    setPrice(tick.p);
-
-    // Append to circular buffer for the sparkline.
+    lastPriceRef.current = t.p;
+    setPrice(t.p);
+    setLastTickAt(Date.now());
     setSparkPoints((pts) => {
       const next = pts.length >= MAX_SPARK_POINTS ? pts.slice(1) : pts.slice();
-      next.push(tick.p);
+      next.push(t.p);
       return next;
     });
-
-    // Flash the card green/red based on direction vs previous tick.
     const el = rootRef.current;
-    if (el && prev !== null && tick.p !== prev) {
-      const cls = tick.p > prev ? "flash-gain" : "flash-loss";
+    if (el && prev !== null && t.p !== prev) {
+      const cls = t.p > prev ? "flash-gain" : "flash-loss";
       el.classList.remove("flash-gain", "flash-loss");
-      // Force reflow so the animation restarts if the same class re-applies.
       void el.offsetWidth;
       el.classList.add(cls);
     }
@@ -79,7 +94,6 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
 
   useFinnhubSocket(token, favorite.symbol, onTick);
 
-  // Derived display values
   const changeAbs = price !== null && seed ? price - seed.pc : null;
   const changePct =
     changeAbs !== null && seed && seed.pc > 0
@@ -87,22 +101,39 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
       : null;
   const isUp = changeAbs !== null && changeAbs >= 0;
 
+  // Stale = no tick in 60s. Only meaningful if we've ever ticked.
+  const isStale = lastTickAt !== null && Date.now() - lastTickAt > 60_000;
+
   return (
-    <div
+    <button
       ref={rootRef}
-      className="reveal glass group relative overflow-hidden rounded-[var(--radius-card)] p-5 transition hover:-translate-y-0.5 hover:border-white/20"
+      type="button"
+      onClick={() => onOpen(favorite.symbol)}
+      className="reveal glass group relative overflow-hidden rounded-[var(--radius-card)] p-5 text-left transition hover:-translate-y-0.5 hover:border-white/20"
       style={{ ["--i" as string]: index.toString() }}
     >
-      {/* Remove button */}
-      <button
+      {/* Remove — stopPropagation so clicking X doesn't also open detail. */}
+      <span
+        role="button"
+        tabIndex={0}
         aria-label={`Remove ${favorite.symbol}`}
-        onClick={() => onRemove(favorite.symbol)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(favorite.symbol);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.stopPropagation();
+            e.preventDefault();
+            onRemove(favorite.symbol);
+          }
+        }}
         className="absolute right-3 top-3 rounded-md p-1.5 text-bone-400 opacity-0 transition hover:bg-white/5 hover:text-[var(--color-loss)] group-hover:opacity-100 focus:opacity-100"
       >
         <X className="size-3.5" />
-      </button>
+      </span>
 
-      {/* Header row: symbol + company name */}
+      {/* Header row */}
       <div className="mb-4 flex items-start gap-3">
         {favorite.logo ? (
           <img
@@ -110,7 +141,6 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
             alt=""
             className="size-10 shrink-0 rounded-lg bg-white/5 object-cover p-1 ring-1 ring-white/10"
             onError={(e) => {
-              // Logos occasionally 404 — hide silently rather than show broken icon.
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
@@ -130,7 +160,11 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
       </div>
 
       {/* Price */}
-      <div className="mb-1 flex items-baseline gap-2">
+      <div
+        className={`mb-1 flex items-baseline gap-2 transition-opacity ${
+          isStale ? "opacity-70" : ""
+        }`}
+      >
         <span className="font-mono text-3xl font-medium tracking-tight text-bone-50 tabular">
           {price !== null ? formatPrice(price) : "—.——"}
         </span>
@@ -139,29 +173,32 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
         </span>
       </div>
 
-      {/* Change vs previous close */}
-      <div
-        className={`flex items-center gap-1.5 font-mono text-sm ${
-          changeAbs === null
-            ? "text-bone-400"
-            : isUp
-            ? "text-[var(--color-gain)]"
-            : "text-[var(--color-loss)]"
-        }`}
-      >
-        {changeAbs !== null &&
-          (isUp ? (
-            <ArrowUpRight className="size-4" />
-          ) : (
-            <ArrowDownRight className="size-4" />
-          ))}
-        <span className="tabular">
-          {changeAbs !== null ? formatSigned(changeAbs) : "—"}
-        </span>
-        <span className="text-bone-400">·</span>
-        <span className="tabular">
-          {changePct !== null ? `${formatSigned(changePct, 2)}%` : "—"}
-        </span>
+      {/* Change + freshness */}
+      <div className="flex items-center justify-between gap-2">
+        <div
+          className={`flex items-center gap-1.5 font-mono text-sm ${
+            changeAbs === null
+              ? "text-bone-400"
+              : isUp
+              ? "text-[var(--color-gain)]"
+              : "text-[var(--color-loss)]"
+          }`}
+        >
+          {changeAbs !== null &&
+            (isUp ? (
+              <ArrowUpRight className="size-4" />
+            ) : (
+              <ArrowDownRight className="size-4" />
+            ))}
+          <span className="tabular">
+            {changeAbs !== null ? formatSigned(changeAbs) : "—"}
+          </span>
+          <span className="text-bone-400">·</span>
+          <span className="tabular">
+            {changePct !== null ? `${formatSigned(changePct, 2)}%` : "—"}
+          </span>
+        </div>
+        <FreshnessLabel lastTickAt={lastTickAt} isStale={isStale} />
       </div>
 
       {/* Sparkline */}
@@ -169,13 +206,45 @@ export function StockCard({ favorite, token, index, onRemove }: Props) {
         <Sparkline points={sparkPoints} up={isUp} />
       </div>
 
-      {/* Bottom stats row */}
+      {/* Bottom stats */}
       <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/5 pt-3 font-mono text-[10px] uppercase tracking-[0.15em] text-bone-400">
         <Stat label="open" value={seed ? formatPrice(seed.o) : "—"} />
         <Stat label="high" value={seed ? formatPrice(seed.h) : "—"} />
         <Stat label="low" value={seed ? formatPrice(seed.l) : "—"} />
       </div>
-    </div>
+    </button>
+  );
+}
+
+/**
+ * Small "Xs ago / stale" label in the top-right of the change row.
+ * Color coding:
+ *   - dim: awaiting first tick
+ *   - bone-300: fresh (<60s)
+ *   - ember: stale (>60s)
+ */
+function FreshnessLabel({
+  lastTickAt,
+  isStale,
+}: {
+  lastTickAt: number | null;
+  isStale: boolean;
+}) {
+  if (!lastTickAt) {
+    return (
+      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-bone-400">
+        awaiting
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`font-mono text-[9px] uppercase tracking-[0.2em] ${
+        isStale ? "text-[var(--color-ember)]" : "text-bone-300"
+      }`}
+    >
+      {formatRelative(lastTickAt)}
+    </span>
   );
 }
 
@@ -190,11 +259,6 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-/**
- * Minimalist inline SVG sparkline. No library because the shape is trivial
- * and we don't want another dependency in the bundle. Draws a smooth path
- * plus a subtle gradient fill underneath.
- */
 function Sparkline({ points, up }: { points: number[]; up: boolean }) {
   if (points.length < 2) {
     return (
