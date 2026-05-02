@@ -41,6 +41,12 @@ jobs:
         #   VITE_FINNHUB_API_KEY: ${{ secrets.VITE_FINNHUB_API_KEY }}
 
       - uses: actions/configure-pages@v5
+        # `enablement: true` makes the action auto-enable Pages on the repo
+        # if it's not already configured, so the first run doesn't 404 on
+        # the Pages API. Requires the workflow to have `pages: write`
+        # permission, which we already grant above.
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

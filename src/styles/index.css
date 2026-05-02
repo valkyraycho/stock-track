@@ -7,11 +7,13 @@
    Keeping tokens here co-locates them with the utilities that consume them.
    ────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* Fonts — loaded via <link> in index.html */
-  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
-  --font-sans: "Bricolage Grotesque", system-ui, sans-serif;
+  /* Fonts — loaded via <link> in index.html.
+     Satoshi is the workhorse (display + body); Geist Mono for all numerics;
+     Instrument Serif Italic reserved for a few editorial accent words. */
+  --font-display: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Instrument Serif", Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Palette — not the generic cyan/magenta neon.
      Near-black with a violet undertone, warm bone white text,
@@ -56,10 +58,11 @@
     background: var(--color-ink-950);
     color: var(--color-bone-100);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "ss02", "cv11";
+    /* Satoshi renders best with default features; no custom sets applied. */
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: hidden;
+    letter-spacing: -0.005em;
   }
 
   /* Tabular numerals everywhere financial data appears — prevents digits

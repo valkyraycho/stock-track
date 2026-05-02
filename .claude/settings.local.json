@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(claude mcp:*)",
+      "Bash(npx playwright:*)",
+      "Bash(node:*)"
     ]
   }
 }
