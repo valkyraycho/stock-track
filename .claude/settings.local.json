@@ -5,7 +5,9 @@
       "Bash(npm run:*)",
       "Bash(claude mcp:*)",
       "Bash(npx playwright:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
     ]
   }
 }

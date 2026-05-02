@@ -7,6 +7,7 @@ import { EmptyState } from "./components/EmptyState";
 import { TickerTape } from "./components/TickerTape";
 import { ToastContainer } from "./components/ToastContainer";
 import { MarketClockBanner } from "./components/MarketClockBanner";
+import { MarketIndices } from "./components/MarketIndices";
 import { SortControls, type SortKey } from "./components/SortControls";
 import { StockDetailModal } from "./components/StockDetailModal";
 import { useFavorites } from "./hooks/useFavorites";
@@ -178,6 +179,7 @@ export default function App() {
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10 md:px-10 md:py-14">
         <MarketClockBanner />
+        {token && <MarketIndices token={token} />}
 
         {favorites.length > 0 && (
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
