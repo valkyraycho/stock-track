@@ -9,6 +9,7 @@ import {
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useFinnhubSocket } from "../hooks/useFinnhubSocket";
 import { quote as fetchQuote } from "../lib/finnhub";
+import { NewsPanel } from "./NewsPanel";
 import type { Favorite, Profile, Quote, TradeTick } from "../types";
 import { formatRelative } from "../lib/marketHours";
 
@@ -110,7 +111,7 @@ export function StockDetailModal({
       />
       <div
         ref={containerRef}
-        className="glass-strong relative z-10 w-full max-w-3xl overflow-hidden rounded-[var(--radius-card)]"
+        className="glass-strong relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[var(--radius-card)]"
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
@@ -157,6 +158,8 @@ export function StockDetailModal({
             <X className="size-4" />
           </button>
         </div>
+
+        <div className="flex-1 overflow-y-auto">
 
         {/* Price block */}
         <div className="flex flex-wrap items-end justify-between gap-6 px-6 pt-6">
@@ -220,6 +223,11 @@ export function StockDetailModal({
             label="added"
             value={new Date(favorite.addedAt).toLocaleDateString()}
           />
+        </div>
+
+        {/* News */}
+        <NewsPanel symbol={favorite.symbol} token={token} />
+
         </div>
 
         {/* Footer actions */}

@@ -8,7 +8,7 @@
  *     project this size. We'll graduate to one only if a concrete need appears.
  */
 
-import type { Profile, Quote, SearchResult } from "../types";
+import type { NewsItem, Profile, Quote, SearchResult } from "../types";
 
 const BASE = "https://finnhub.io/api/v1";
 
@@ -69,4 +69,24 @@ export function quote(symbol: string, token: string): Promise<Quote> {
 /** Company profile. Cached per-symbol in localStorage by the caller. */
 export function profile2(symbol: string, token: string): Promise<Profile> {
   return get<Profile>("/stock/profile2", { symbol }, token);
+}
+
+/**
+ * Company news for the last N days (default: 14). Finnhub requires `from`
+ * and `to` as YYYY-MM-DD strings — we compute them here so callers don't
+ * have to. Still on the free tier as of 2026-05.
+ */
+export async function companyNews(
+  symbol: string,
+  token: string,
+  days = 14
+): Promise<NewsItem[]> {
+  const to = new Date();
+  const from = new Date(to.getTime() - days * 86_400_000);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return get<NewsItem[]>(
+    "/company-news",
+    { symbol, from: fmt(from), to: fmt(to) },
+    token
+  );
 }

@@ -58,3 +58,16 @@ export type TradeTick = {
   /** unix ms */ t: number;
   /** volume */ v: number;
 };
+
+/** A row from Finnhub /company-news. */
+export type NewsItem = {
+  category: string;
+  /** unix seconds */ datetime: number;
+  headline: string;
+  id: number;
+  image: string;
+  related: string;
+  source: string;
+  summary: string;
+  url: string;
+};
