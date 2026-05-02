@@ -8,6 +8,9 @@ type Props = {
   onRemove: (symbol: string) => void;
   onOpen: (symbol: string) => void;
   onSeed: (symbol: string, seed: { dp: number; c: number }) => void;
+  selectionActive?: boolean;
+  selected?: Set<string>;
+  onToggleSelect?: (symbol: string) => void;
 };
 
 const UNTAGGED = "__untagged__";
@@ -35,6 +38,9 @@ export function GroupedStockGrid({
   onRemove,
   onOpen,
   onSeed,
+  selectionActive = false,
+  selected,
+  onToggleSelect,
 }: Props) {
   const groups = useMemo(() => {
     // symbol -> Favorite for deduping via referential equality
@@ -79,6 +85,9 @@ export function GroupedStockGrid({
                 onRemove={onRemove}
                 onOpen={onOpen}
                 onSeed={onSeed}
+                selectionActive={selectionActive}
+                isSelected={selected?.has(fav.symbol) ?? false}
+                onToggleSelect={onToggleSelect}
               />
             ))}
           </div>

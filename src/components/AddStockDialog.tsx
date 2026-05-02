@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, X, Loader2, TrendingUp, Check } from "lucide-react";
+import {
+  Search,
+  X,
+  Loader2,
+  TrendingUp,
+  Check,
+  Tag as TagIcon,
+  Plus,
+} from "lucide-react";
 import { search as finnhubSearch, quote, profile2 } from "../lib/finnhub";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { showToast } from "../lib/toast";
@@ -11,6 +19,10 @@ type Props = {
   onClose: () => void;
   onAdd: (fav: Favorite) => void;
   isAlreadyAdded: (symbol: string) => boolean;
+  /** Existing tags — shown as quick-apply chips in the tag-on-add step. */
+  allTags: string[];
+  /** Called when the user picks or creates a tag for a just-added stock. */
+  onTagJustAdded: (symbol: string, tag: string) => void;
 };
 
 /**
@@ -29,6 +41,8 @@ export function AddStockDialog({
   onClose,
   onAdd,
   isAlreadyAdded,
+  allTags,
+  onTagJustAdded,
 }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -36,7 +50,11 @@ export function AddStockDialog({
   const [adding, setAdding] = useState<string | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  /** If set, we're in the "tag the just-added stock" interstitial step. */
+  const [justAddedSymbol, setJustAddedSymbol] = useState<string | null>(null);
+  const [newTagDraft, setNewTagDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const tagInputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(dialogRef, open);
@@ -51,8 +69,16 @@ export function AddStockDialog({
       setResults([]);
       setError(null);
       setActiveIdx(0);
+      setJustAddedSymbol(null);
+      setNewTagDraft("");
     }
   }, [open]);
+
+  // When we enter the tag-on-add step, focus the new-tag input so the user
+  // can immediately start typing a new tag if none of the chips fit.
+  useEffect(() => {
+    if (justAddedSymbol) tagInputRef.current?.focus();
+  }, [justAddedSymbol]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -115,11 +141,12 @@ export function AddStockDialog({
           tone: "success",
           durationMs: 2400,
         });
-        // Keep-open: clear and refocus rather than closing.
+        // Enter the tag-on-add interstitial. The user can apply a tag or
+        // skip; either way we then return to search mode, dialog still open.
+        setJustAddedSymbol(r.symbol);
         setQuery("");
         setResults([]);
         setActiveIdx(0);
-        inputRef.current?.focus();
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -146,6 +173,21 @@ export function AddStockDialog({
     },
     [activeIdx, addEntry, onClose, results]
   );
+
+  // Tag-on-add helpers
+  const applyTag = (rawTag: string) => {
+    const tag = rawTag.trim().toLowerCase();
+    if (!tag || !justAddedSymbol) return;
+    onTagJustAdded(justAddedSymbol, tag);
+    skipTag();
+  };
+
+  const skipTag = () => {
+    setJustAddedSymbol(null);
+    setNewTagDraft("");
+    // Return focus to the search input so users can add another stock.
+    inputRef.current?.focus();
+  };
 
   if (!open) return null;
 
@@ -192,21 +234,87 @@ export function AddStockDialog({
         </div>
 
         <div className="max-h-[50vh] overflow-y-auto">
+          {justAddedSymbol && (
+            <div className="border-b border-white/10 px-5 py-4">
+              <div className="mb-2.5 flex items-center gap-2">
+                <TagIcon className="size-3.5 text-[var(--color-lime)]" />
+                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300">
+                  tag {justAddedSymbol} as…
+                </span>
+                <span className="ml-auto font-mono text-[11px] text-bone-400">
+                  optional
+                </span>
+              </div>
+              <div className="mb-2.5 flex flex-wrap gap-1.5">
+                {allTags.length === 0 && (
+                  <span className="font-mono text-[11px] text-bone-400">
+                    no existing tags — create one below
+                  </span>
+                )}
+                {allTags.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => applyTag(t)}
+                    className="rounded-full border border-white/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-bone-200 transition hover:border-[var(--color-iris)]/50 hover:text-[var(--color-iris)]"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    applyTag(newTagDraft);
+                  }}
+                  className="flex flex-1 items-center gap-1.5 rounded-full border border-white/10 bg-ink-800 px-3 py-1.5"
+                >
+                  <Plus className="size-3 text-bone-400" />
+                  <input
+                    ref={tagInputRef}
+                    value={newTagDraft}
+                    onChange={(e) => setNewTagDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        skipTag();
+                      }
+                    }}
+                    placeholder="new tag…"
+                    maxLength={24}
+                    className="w-full bg-transparent font-mono text-[11px] uppercase tracking-[0.15em] text-bone-100 placeholder:text-bone-400 placeholder:normal-case focus:outline-none"
+                  />
+                </form>
+                <button
+                  onClick={skipTag}
+                  className="rounded-lg px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-bone-300 hover:text-bone-100"
+                >
+                  skip
+                </button>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="px-5 py-4 text-sm text-[var(--color-loss)]">
               {error}
             </div>
           )}
 
-          {!error && query && !searching && results.length === 0 && (
-            <EmptyHint message="No matching US common stocks." />
-          )}
+          {!justAddedSymbol &&
+            !error &&
+            query &&
+            !searching &&
+            results.length === 0 && (
+              <EmptyHint message="No matching US common stocks." />
+            )}
 
-          {!error && !query && (
+          {!justAddedSymbol && !error && !query && (
             <EmptyHint message="Start typing to search. Dialog stays open — add as many as you like." />
           )}
 
-          {results.map((r, i) => {
+          {!justAddedSymbol &&
+            results.map((r, i) => {
             const existing = isAlreadyAdded(r.symbol);
             const isActive = i === activeIdx;
             return (
@@ -250,6 +358,7 @@ export function AddStockDialog({
             );
           })}
         </div>
+
 
         <div className="flex items-center justify-between gap-2 border-t border-white/10 px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-bone-400">
           <span>us common stocks · via finnhub /search</span>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
+import { X, ArrowUpRight, ArrowDownRight, Wallet, Check } from "lucide-react";
 import { quote as fetchQuote } from "../lib/finnhub";
 import { useFinnhubSocket } from "../hooks/useFinnhubSocket";
 import { setLivePrice } from "../lib/livePrices";
@@ -14,6 +14,11 @@ type Props = {
   onOpen: (symbol: string) => void;
   /** Called once when the seed /quote succeeds — App uses this for sorting. */
   onSeed: (symbol: string, seed: { dp: number; c: number }) => void;
+  /** Selection mode props. When `selectionActive`, card click toggles
+   *  selection instead of opening the detail modal. */
+  selectionActive?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (symbol: string) => void;
 };
 
 const MAX_SPARK_POINTS = 80;
@@ -36,6 +41,9 @@ export function StockCard({
   onRemove,
   onOpen,
   onSeed,
+  selectionActive = false,
+  isSelected = false,
+  onToggleSelect,
 }: Props) {
   const [seed, setSeed] = useState<Quote | null>(null);
   const [price, setPrice] = useState<number | null>(null);
@@ -114,10 +122,32 @@ export function StockCard({
     <button
       ref={rootRef}
       type="button"
-      onClick={() => onOpen(favorite.symbol)}
-      className="reveal glass group relative overflow-hidden rounded-[var(--radius-card)] p-5 text-left transition hover:-translate-y-0.5 hover:border-white/20"
+      onClick={() =>
+        selectionActive
+          ? onToggleSelect?.(favorite.symbol)
+          : onOpen(favorite.symbol)
+      }
+      aria-pressed={selectionActive ? isSelected : undefined}
+      className={`reveal glass group relative overflow-hidden rounded-[var(--radius-card)] p-5 text-left transition hover:-translate-y-0.5 hover:border-white/20 ${
+        isSelected
+          ? "ring-2 ring-[var(--color-lime)] ring-offset-2 ring-offset-ink-950"
+          : ""
+      }`}
       style={{ ["--i" as string]: index.toString() }}
     >
+      {/* Selection checkbox — only shown in selection mode */}
+      {selectionActive && (
+        <span
+          aria-hidden="true"
+          className={`absolute left-3 top-3 z-10 flex size-5 items-center justify-center rounded-md border transition ${
+            isSelected
+              ? "border-[var(--color-lime)] bg-[var(--color-lime)]"
+              : "border-white/25 bg-ink-900/80"
+          }`}
+        >
+          {isSelected && <Check className="size-3.5 text-ink-950" />}
+        </span>
+      )}
       {/* Remove — stopPropagation so clicking X doesn't also open detail. */}
       <span
         role="button"
@@ -134,7 +164,11 @@ export function StockCard({
             onRemove(favorite.symbol);
           }
         }}
-        className="absolute right-3 top-3 rounded-md p-1.5 text-bone-400 opacity-0 transition hover:bg-white/5 hover:text-[var(--color-loss)] group-hover:opacity-100 focus:opacity-100"
+        className={`absolute right-3 top-3 rounded-md p-1.5 text-bone-400 transition hover:bg-white/5 hover:text-[var(--color-loss)] focus:opacity-100 ${
+          selectionActive
+            ? "pointer-events-none opacity-0"
+            : "opacity-0 group-hover:opacity-100"
+        }`}
       >
         <X className="size-3.5" />
       </span>

@@ -1,4 +1,4 @@
-// Playwright UI validation — exercises every new feature.
+// Playwright UI validation — exercises the new tag/select flows.
 //
 // Run: node scripts/validate-ui.mjs
 // (Requires vite dev server running on :5173.)
@@ -23,84 +23,106 @@ async function main() {
   const shot = (name) =>
     page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: false });
 
-  // Fresh state so we see the empty state + first-run flow.
   await page.goto(BASE);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForLoadState("networkidle");
   await page.waitForFunction(() => document.fonts.ready.then(() => true));
   await page.waitForTimeout(400);
+
+  // 01 — empty state, TagFilter should show ability to create tags even with no favorites
   await shot("01-empty-state");
   console.log("✓ 01 empty state");
 
-  // Click a quick-add chip.
+  // Quick-add AAPL from empty-state chip; then use search dialog for MSFT, NVDA.
   await page.getByRole("button", { name: /AAPL/ }).first().click();
-  await page.waitForTimeout(1400);
-  await shot("02-one-card-after-quickadd");
-  console.log("✓ 02 card after quick-add");
-
-  // Open the Add dialog and add two more via keyboard, keeping dialog open.
-  await page.keyboard.press("a");
-  await page.waitForTimeout(350);
-  await shot("03-add-dialog-open");
-
-  // Type MSFT, add.
-  await page.getByPlaceholder(/search symbol/i).fill("MSFT");
-  await page.waitForTimeout(900);
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(900);
-  // Dialog should still be open! Next type NVDA.
-  await page.getByPlaceholder(/search symbol/i).fill("NVDA");
-  await page.waitForTimeout(900);
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(900);
-  await shot("04-dialog-still-open-after-multi-add");
-  console.log("✓ 04 dialog remained open through multi-add");
-
-  // Close dialog with Esc.
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(500);
-  await shot("05-three-cards-grid");
-  console.log("✓ 05 three-card grid");
-
-  // Change sort to "A–Z".
-  await page.getByRole("button", { name: /A–Z/i }).click();
-  await page.waitForTimeout(600);
-  await shot("06-sort-alpha");
-  console.log("✓ 06 sort A–Z");
-
-  // Change sort to "Change".
-  await page.getByRole("button", { name: /^Change$/i }).click();
-  await page.waitForTimeout(600);
-  await shot("07-sort-change");
-  console.log("✓ 07 sort by change");
-
-  // Click a card to open the detail modal.
-  // Target the first visible card by its symbol text.
-  const firstCard = page.locator("main button.reveal").first();
-  await firstCard.click();
   await page.waitForTimeout(1200);
-  await shot("08-detail-modal");
-  console.log("✓ 08 detail modal");
+  for (const sym of ["MSFT", "NVDA"]) {
+    await page.keyboard.press("a");
+    await page.waitForTimeout(350);
+    await page.getByPlaceholder(/search symbol/i).fill(sym);
+    await page.waitForTimeout(900);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(1000);
+    // Skip the tag-on-add step to keep this first batch untagged.
+    await page.getByRole("button", { name: /^skip$/i }).click();
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  }
+  await shot("02-three-cards");
+  console.log("✓ 02 three cards");
 
-  // Close the detail modal.
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(400);
-
-  // Remove a card by hovering + clicking X, then verify undo toast appears.
-  await firstCard.hover();
-  await page.waitForTimeout(250);
-  const removeBtn = firstCard.locator('[aria-label^="Remove"]');
-  await removeBtn.click();
-  await page.waitForTimeout(500);
-  await shot("09-undo-toast");
-  console.log("✓ 09 undo toast visible");
-
-  // Click the undo action.
-  await page.getByRole("button", { name: /^Undo$/i }).click();
+  // F1: Create a standalone tag via TagFilter "+ new" button
+  await page.getByRole("button", { name: /create a new tag/i }).click();
+  await page.waitForTimeout(300);
+  await page.keyboard.type("tech");
+  await page.keyboard.press("Enter");
   await page.waitForTimeout(600);
-  await shot("10-after-undo");
-  console.log("✓ 10 after undo");
+  await shot("03-standalone-tag-created");
+  console.log("✓ 03 standalone tag created");
+
+  // F4: Tag-on-add flow — add GOOGL, tag it "tech" immediately
+  await page.keyboard.press("a");
+  await page.waitForTimeout(400);
+  await page.getByPlaceholder(/search symbol/i).fill("GOOGL");
+  await page.waitForTimeout(900);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(1200);
+  await shot("04-tag-on-add-prompt");
+  console.log("✓ 04 tag-on-add prompt visible");
+
+  // Click the 'tech' chip in the tag-on-add step. Scope to inside the
+  // open dialog so we don't hit the TagFilter chip behind the backdrop.
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: /^tech$/i }).click();
+  await page.waitForTimeout(700);
+  // Close dialog
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(500);
+  await shot("05-after-tag-on-add");
+  console.log("✓ 05 after tag-on-add (GOOGL should have tech tag)");
+
+  // F3: Enter selection mode
+  await page.getByRole("button", { name: /^select$/i }).click();
+  await page.waitForTimeout(400);
+  await shot("06-selection-mode-entered");
+  console.log("✓ 06 selection mode entered");
+
+  // Click two cards to select
+  const cards = page.locator("main button.reveal");
+  await cards.nth(0).click();
+  await page.waitForTimeout(200);
+  await cards.nth(1).click();
+  await page.waitForTimeout(400);
+  await shot("07-two-selected-with-bulk-bar");
+  console.log("✓ 07 two selected, bulk bar visible");
+
+  // Bulk tag them "tech"
+  await page.getByRole("button", { name: /^tag$/i }).first().click();
+  await page.waitForTimeout(300);
+  await shot("08-bulk-tag-popover");
+  // Click 'tech' in the popover (first visible one)
+  await page.locator('button', { hasText: /^tech$/i }).first().click();
+  await page.waitForTimeout(800);
+  await shot("09-after-bulk-tag");
+  console.log("✓ 08-09 bulk tag applied");
+
+  // F2: Delete the "tech" tag globally
+  // Hover to reveal X, then click it
+  const techFilterChip = page.locator('button', { hasText: /^tech$/i }).first();
+  await techFilterChip.hover();
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: /delete tag tech/i }).click();
+  await page.waitForTimeout(500);
+  await shot("10-delete-tag-confirm");
+  console.log("✓ 10 delete-tag confirm dialog");
+
+  // Confirm
+  await page.getByRole("button", { name: /^delete$/i }).click();
+  await page.waitForTimeout(800);
+  await shot("11-after-tag-delete");
+  console.log("✓ 11 after tag delete");
 
   await browser.close();
   console.log(`\nScreenshots → ${OUT}`);

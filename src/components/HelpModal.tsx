@@ -9,6 +9,7 @@ import {
   Newspaper,
   Search,
   BarChart3,
+  CheckSquare,
 } from "lucide-react";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 
@@ -124,7 +125,7 @@ function Shortcuts() {
           desc="Navigate search results or alert threshold"
         />
         <Row keys={["↵"]} desc="Add the highlighted search result" />
-        <Row keys={["Esc"]} desc="Close any open dialog / modal" />
+        <Row keys={["Esc"]} desc="Close dialog, or exit selection mode" />
         <Row
           keys={["Click", "card"]}
           desc="Open the full detail view for a ticker"
@@ -161,7 +162,12 @@ function Features() {
         <Feature
           icon={Layers}
           title="Tags, filter & group"
-          body="Tag any stock with free-form labels ('tech', 'banks'). Filter chips narrow the grid to one tag. Toggle the grouped-view icon to partition the grid into sections per tag."
+          body="Tag stocks with free-form labels. Create standalone tags via the + chip in the filter. Hover any tag chip to delete it globally (confirmation shows affected count). Toggle the grouped-view icon to partition the grid into sections per tag."
+        />
+        <Feature
+          icon={CheckSquare}
+          title="Multi-select & bulk actions"
+          body="Click 'Select' in the watchlist header to enter selection mode. Click cards to toggle. A bar appears at the bottom: tag all selected in one shot, or remove them from tracking. Esc exits."
         />
         <Feature
           icon={Bell}
